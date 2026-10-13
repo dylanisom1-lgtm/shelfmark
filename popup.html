@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Save to Shelfmark</title>
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/popup.css" />
+  </head>
+  <body>
+    <header class="p-head">
+      <div class="brand">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M6 2.5h12a1 1 0 0 1 1 1V20l-7-4.2L5 20V3.5a1 1 0 0 1 1-1Z" fill="var(--accent)" />
+          <path d="M3 21.5h18" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        <span>Shelfmark</span>
+      </div>
+      <button type="button" class="btn quiet small" id="open-app">Open Shelfmark</button>
+    </header>
+
+    <form id="save-form" class="p-body" autocomplete="off">
+      <p class="saved-note" id="saved-note" hidden></p>
+      <label class="field"><span>Name</span><input class="input" name="title" /></label>
+      <p class="url" id="url"></p>
+      <label class="field"><span>Group</span><select class="select" name="group"></select></label>
+      <label class="field" id="new-group-field" hidden><span>New group name</span><input class="input" name="newGroup" /></label>
+      <label class="field"><span>Opens in</span><select class="select" name="mode"></select></label>
+      <p class="p-error" id="error" role="alert" hidden></p>
+      <button type="submit" class="btn primary wide" id="save-btn">Save page</button>
+    </form>
+
+    <div class="p-done" id="done" hidden>
+      <p id="done-text"></p>
+      <button type="button" class="btn" id="done-open">Open Shelfmark</button>
+    </div>
+
+    <footer class="p-foot">
+      <button type="button" class="link-btn" id="save-all"></button>
+    </footer>
+
+    <script type="module" src="js/popup.js"></script>
+  </body>
+</html>

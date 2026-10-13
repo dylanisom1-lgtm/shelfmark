@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#2457c5" />
+    <title>Shelfmark</title>
+    <link rel="icon" href="icons/icon-32.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <div id="preview-note" class="preview-note" hidden></div>
+
+    <header class="top">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path d="M6 2.5h12a1 1 0 0 1 1 1V20l-7-4.2L5 20V3.5a1 1 0 0 1 1-1Z" fill="var(--accent)" />
+          <path d="M3 21.5h18" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        <span>Shelfmark</span>
+      </div>
+
+      <label class="search">
+        <span class="search-ic" aria-hidden="true"></span>
+        <input id="q" type="search" placeholder="Search bookmarks" autocomplete="off" spellcheck="false" aria-label="Search bookmarks" />
+        <kbd class="key-hint" aria-hidden="true">/</kbd>
+      </label>
+
+      <div class="actions">
+        <button id="add-btn" class="btn primary" type="button"><span data-icon="plus"></span>Add</button>
+        <button id="edit-btn" class="btn" type="button" aria-pressed="false">Edit</button>
+        <button id="menu-btn" class="icon-btn menu-btn" type="button" aria-label="More options" aria-haspopup="menu" aria-expanded="false"><span data-icon="more"></span></button>
+        <div id="menu" class="menu" role="menu" hidden>
+          <button type="button" role="menuitem" data-menu="layout">Layout…</button>
+          <hr />
+          <button type="button" role="menuitem" data-menu="import">Import bookmarks…</button>
+          <button type="button" role="menuitem" data-menu="export">Export backup</button>
+          <hr />
+          <button type="button" role="menuitem" data-menu="settings">Settings</button>
+          <button type="button" role="menuitem" data-menu="help">Keyboard shortcuts</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="notice" class="notice" hidden></div>
+
+    <section id="setup" class="setup" hidden aria-labelledby="setup-heading">
+      <p class="setup-step" data-step-label>Step 1 of 3</p>
+
+      <div data-step="1">
+        <h1 id="setup-heading">Choose a layout</h1>
+        <p class="setup-lede">Pick how your bookmarks are laid out. You can switch any time from the ⋯ menu.</p>
+        <div class="lp-grid" data-setup-layouts></div>
+      </div>
+
+      <div data-step="2" hidden>
+        <div class="mode-block" data-mode="extension">
+        <h1>When <span data-b="name">Chrome</span> starts</h1>
+        <div class="choice-list" role="radiogroup" aria-label="Start-up">
+          <label class="choice">
+            <input type="radio" name="setup-startup" value="true" />
+            <span><strong>Open Shelfmark</strong><span>It takes the place of the empty new tab <span data-b="name">Chrome</span> opens. If <span data-b="name">Chrome</span> reopens your last tabs, Shelfmark is added in front of them.</span></span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="setup-startup" value="false" />
+            <span><strong>Leave start-up as it is</strong><span>Open Shelfmark when you want it with Alt+Shift+K or the toolbar button.</span></span>
+          </label>
+        </div>
+        <h2>Private windows</h2>
+        <p data-setup-incog></p>
+        <div>
+          <button type="button" class="btn" data-setup="incognito" data-setup-incog-btn>Open Shelfmark's settings</button>
+        </div>
+        <p class="hint"><span data-b="name">Chrome</span> may reload Shelfmark when you change that setting. Setup picks up where you left off.</p>
+        </div>
+        <div class="mode-block" data-mode="web" hidden>
+          <h1>Make Shelfmark your home page</h1>
+          <p class="setup-lede">So it’s the first thing you see when <span data-b="name">Chrome</span> starts. <span data-b="homeSteps"></span>:</p>
+          <div class="copy-row"><input class="input" readonly data-home-url aria-label="Shelfmark’s address" /><button type="button" class="btn" data-copy="home">Copy</button></div>
+          <p class="hint">You can skip this and do it later from Settings.</p>
+          <h2>Private windows</h2>
+          <p>A website can’t open private windows, so bookmarks set to open in one are copied for you to paste into a private window (<span data-b="privateKeys"></span>). Installed as an extension, Shelfmark opens them directly.</p>
+        </div>
+      </div>
+
+      <div data-step="3" hidden>
+        <h1>Add your bookmarks</h1>
+        <p class="setup-lede" data-setup-have></p>
+        <div class="choice-cards">
+          <button type="button" class="choice-btn" data-setup="import"><strong>Import a bookmarks file</strong><span>Exported from Chrome, Firefox, Edge or Safari, or a Shelfmark backup. Each folder becomes a group.</span></button>
+          <button type="button" class="choice-btn" data-setup="finish"><strong data-finish-label>Start empty</strong><span data-mode="extension">Add bookmarks later from the toolbar button, the right-click menu, or Add.</span><span data-mode="web" hidden>Add bookmarks later with Add, or the Save to Shelfmark button in Settings.</span></button>
+        </div>
+        <p class="hint">To get a bookmarks file from <span data-b="name">Chrome</span>, <span data-b="exportSteps">open the Bookmark manager (Ctrl+Shift+O), click the ⋮ menu, and choose Export bookmarks</span>.</p>
+      </div>
+
+      <footer class="setup-nav">
+        <button type="button" class="btn" data-setup="back">Back</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn primary" data-setup="next">Continue</button>
+      </footer>
+    </section>
+
+    <main id="grid" class="grid" aria-label="Bookmarks"></main>
+
+    <section id="empty" class="empty" hidden>
+      <h1>No bookmarks yet</h1>
+      <p>Add one here, save pages from the Shelfmark button in the toolbar, or bring in the bookmarks you already have.</p>
+      <div class="empty-actions">
+        <button type="button" class="btn primary" data-empty="add">Add a bookmark</button>
+        <button type="button" class="btn" data-empty="import">Import a bookmarks file</button>
+      </div>
+      <p class="hint">To get a bookmarks file from <span data-b="name">Chrome</span>, <span data-b="exportSteps">open the Bookmark manager (Ctrl+Shift+O), click the ⋮ menu, and choose Export bookmarks</span>.</p>
+    </section>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+
+    <!-- Bookmark editor -->
+    <dialog id="bm-dialog" class="dialog" aria-labelledby="bm-heading">
+      <form id="bm-form" method="dialog" novalidate>
+        <header class="dlg-head">
+          <h2 id="bm-heading">Add bookmark</h2>
+          <button type="button" class="icon-btn" data-close aria-label="Close"><span data-icon="close"></span></button>
+        </header>
+        <div class="dlg-body">
+          <label class="field"><span>Address</span><input class="input" name="url" placeholder="example.com" autocomplete="off" spellcheck="false" /></label>
+          <label class="field"><span>Name</span><input class="input" name="title" placeholder="Uses the address if left blank" autocomplete="off" /></label>
+          <div class="two">
+            <label class="field"><span>Group</span><select class="select" name="group"></select></label>
+            <label class="field" data-newgroup hidden><span>New group name</span><input class="input" name="newGroup" autocomplete="off" /></label>
+          </div>
+          <div class="two">
+            <label class="field"><span>Opens in</span><select class="select" name="mode"></select></label>
+            <label class="field"><span>If it's already open</span><select class="select" name="reuse"></select></label>
+          </div>
+          <label class="field"><span>Tags</span><input class="input" name="tags" placeholder="Separate with commas" autocomplete="off" /></label>
+          <label class="field"><span>Notes</span><textarea class="textarea" name="notes" rows="2"></textarea></label>
+          <p class="dlg-error" role="alert" hidden></p>
+        </div>
+        <footer class="dlg-foot">
+          <button type="button" class="btn quiet danger" data-delete>Delete</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn" data-close>Cancel</button>
+          <button type="submit" class="btn primary">Save</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <!-- Group editor -->
+    <dialog id="group-dialog" class="dialog" aria-labelledby="group-heading">
+      <form id="group-form" method="dialog" novalidate>
+        <header class="dlg-head">
+          <h2 id="group-heading">New group</h2>
+          <button type="button" class="icon-btn" data-close aria-label="Close"><span data-icon="close"></span></button>
+        </header>
+        <div class="dlg-body">
+          <label class="field"><span>Name</span><input class="input" name="name" autocomplete="off" /></label>
+          <fieldset class="field swatches">
+            <legend>Color</legend>
+            <div class="swatch-row" data-swatches></div>
+            <span class="hint">Matches the tab group <span data-b="name">Chrome</span> creates when you open the whole group.</span>
+          </fieldset>
+          <div class="two">
+            <label class="field"><span>Bookmarks open in</span><select class="select" name="mode"></select></label>
+            <label class="field"><span>If one's already open</span><select class="select" name="reuse"></select></label>
+          </div>
+          <label class="field"><span>Open all puts the tabs in</span>
+            <select class="select" name="openAllIn">
+              <option value="here">This window</option>
+              <option value="window">A new window</option>
+            </select>
+          </label>
+          <p class="dlg-error" role="alert" hidden></p>
+        </div>
+        <footer class="dlg-foot">
+          <button type="button" class="btn quiet danger" data-delete>Delete group</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn" data-close>Cancel</button>
+          <button type="submit" class="btn primary">Save</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <!-- Settings -->
+    <dialog id="settings-dialog" class="dialog wide" aria-labelledby="settings-heading">
+      <form method="dialog">
+        <header class="dlg-head">
+          <h2 id="settings-heading">Settings</h2>
+          <button type="button" class="icon-btn" data-close aria-label="Close"><span data-icon="close"></span></button>
+        </header>
+        <div class="dlg-body settings">
+          <section>
+            <h3>Opening links</h3>
+            <div class="two">
+              <label class="field"><span>Bookmarks open in</span><select class="select" name="defaultMode"></select></label>
+              <label class="field"><span>If one's already open</span>
+                <select class="select" name="defaultReuse">
+                  <option value="false">Open another copy</option>
+                  <option value="true">Switch to the open tab</option>
+                </select>
+              </label>
+            </div>
+            <p class="hint">Groups and single bookmarks can override both.</p>
+          </section>
+          <section>
+            <h3>Layout</h3>
+            <p data-layout-current></p>
+            <button type="button" class="btn" data-menu="layout">Change layout</button>
+          </section>
+          <section data-mode="extension">
+            <h3>When <span data-b="name">Chrome</span> starts</h3>
+            <label class="check"><input type="checkbox" name="openOnStartup" /> Open Shelfmark when <span data-b="name">Chrome</span> starts</label>
+            <p class="hint">Shelfmark takes the place of the empty new tab, or is added in front of tabs <span data-b="name">Chrome</span> reopens.</p>
+          </section>
+          <section data-mode="extension">
+            <h3>Private windows</h3>
+            <p data-incognito-status></p>
+            <button type="button" class="btn" data-open-ext>Open Shelfmark's settings</button>
+          </section>
+          <section data-mode="extension">
+            <h3>From anywhere in <span data-b="name">Chrome</span></h3>
+            <p>Type <kbd>bm</kbd> then a space in the address bar to search your bookmarks.</p>
+            <ul class="shortcut-list" data-shortcuts></ul>
+            <button type="button" class="btn" data-open-shortcuts>Change shortcuts</button>
+          </section>
+          <section data-mode="web" hidden>
+            <h3>Home page</h3>
+            <p>To open Shelfmark when <span data-b="name">Chrome</span> starts: <span data-b="homeSteps"></span>.</p>
+            <div class="copy-row"><input class="input" readonly data-home-url aria-label="Shelfmark’s address" /><button type="button" class="btn" data-copy="home">Copy</button></div>
+          </section>
+          <section data-mode="web" hidden>
+            <h3>Search from the address bar</h3>
+            <p>Set up once, then type <kbd>bm</kbd>, a space and a few letters in the address bar. Enter opens the best match. <span data-b="searchSteps"></span>.</p>
+            <div class="copy-row"><input class="input" readonly data-search-url aria-label="Site search address" /><button type="button" class="btn" data-copy="search">Copy</button></div>
+          </section>
+          <section data-mode="web" hidden>
+            <h3>Save pages from any site</h3>
+            <p>Drag this button to your bookmarks bar. On any page, click it to save that page to Shelfmark.</p>
+            <a class="btn bookmarklet" data-bookmarklet href="#"><svg class="ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 2.5h12a1 1 0 0 1 1 1V20l-7-4.2L5 20V3.5a1 1 0 0 1 1-1Z" fill="currentColor"/></svg>Save to Shelfmark</a>
+          </section>
+          <section data-mode="web" hidden>
+            <h3>Private windows</h3>
+            <p>A website can’t open private windows, so bookmarks set to open in one are copied for you to paste into a private window (<span data-b="privateKeys"></span>). Installed as an extension, Shelfmark opens them directly.</p>
+          </section>
+          <section data-mode="web" hidden>
+            <h3>Site icons</h3>
+            <div class="seg" role="radiogroup" aria-label="Site icons">
+              <label><input type="radio" name="siteIcons" value="letters" /><span>Letters</span></label>
+              <label><input type="radio" name="siteIcons" value="site" /><span>From each site</span></label>
+            </div>
+            <p class="hint">“From each site” asks every bookmarked site for its icon whenever Shelfmark loads. Sites without one keep their letter.</p>
+          </section>
+          <section>
+            <h3>Appearance</h3>
+            <div class="seg" role="radiogroup" aria-label="Theme">
+              <label><input type="radio" name="theme" value="system" /><span>Match system</span></label>
+              <label><input type="radio" name="theme" value="light" /><span>Light</span></label>
+              <label><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
+            </div>
+          </section>
+          <section>
+            <h3>Your data</h3>
+            <p class="hint"><span data-mode="extension">Bookmarks are stored only in this browser.</span><span data-mode="web" hidden>Bookmarks are stored in this browser’s data for this website. Clearing the site’s data deletes them.</span> Export a backup now and then, and to move them to another browser.</p>
+            <div class="row-btns">
+              <button type="button" class="btn" data-menu="export">Export backup</button>
+              <button type="button" class="btn" data-menu="import">Import…</button>
+            </div>
+          </section>
+          <section>
+            <h3>Setup</h3>
+            <p class="hint">Go through the first-run steps again. Your bookmarks stay as they are.</p>
+            <button type="button" class="btn" data-run-setup>Run setup again</button>
+          </section>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Import -->
+    <dialog id="import-dialog" class="dialog" aria-labelledby="import-heading">
+      <form id="import-form" method="dialog">
+        <header class="dlg-head">
+          <h2 id="import-heading">Import bookmarks</h2>
+          <button type="button" class="icon-btn" data-close aria-label="Close"><span data-icon="close"></span></button>
+        </header>
+        <div class="dlg-body">
+          <p class="hint">Choose a Shelfmark backup, or the bookmarks file exported from Chrome, Firefox, Edge or Safari. Each folder becomes a group.</p>
+          <label class="file-pick btn">
+            <input type="file" name="file" accept=".json,.html,.htm,application/json,text/html" />
+            <span data-file-label>Choose file…</span>
+          </label>
+          <p class="import-summary" data-summary hidden></p>
+          <div data-backup-opts hidden class="radio-list">
+            <label><input type="radio" name="how" value="add" checked /> Add to what's here</label>
+            <label><input type="radio" name="how" value="replace" /> Replace everything with the backup</label>
+          </div>
+          <label class="check" data-dupe-opt hidden><input type="checkbox" name="skipDupes" checked /> Skip addresses already saved</label>
+          <p class="dlg-error" role="alert" hidden></p>
+        </div>
+        <footer class="dlg-foot">
+          <span class="spacer"></span>
+          <button type="button" class="btn" data-close>Cancel</button>
+          <button type="submit" class="btn primary" data-import-go disabled>Import</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <!-- Layout -->
+    <dialog id="layout-dialog" class="dialog xwide" aria-labelledby="layout-heading">
+      <form method="dialog">
+        <header class="dlg-head">
+          <h2 id="layout-heading">Layout</h2>
+          <button type="button" class="icon-btn" data-close aria-label="Close"><span data-icon="close"></span></button>
+        </header>
+        <div class="dlg-body">
+          <div class="lp-grid" data-layouts></div>
+          <div class="density-row">
+            <span>Row spacing</span>
+            <div class="seg" role="radiogroup" aria-label="Row spacing">
+              <label><input type="radio" name="density" value="comfortable" /><span>Comfortable</span></label>
+              <label><input type="radio" name="density" value="compact" /><span>Compact</span></label>
+            </div>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Confirm -->
+    <dialog id="confirm-dialog" class="dialog narrow" aria-labelledby="confirm-heading">
+      <form method="dialog">
+        <div class="dlg-body">
+          <h2 id="confirm-heading" data-confirm-text></h2>
+        </div>
+        <footer class="dlg-foot">
+          <span class="spacer"></span>
+          <button type="button" class="btn" data-close>Cancel</button>
+          <button type="submit" class="btn primary" value="ok" data-confirm-ok>OK</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <!-- Keyboard help -->
+    <dialog id="help-dialog" class="dialog wide" aria-labelledby="help-heading">
+      <form method="dialog">
+        <header class="dlg-head">
+          <h2 id="help-heading">Keyboard shortcuts</h2>
+          <button type="button" class="icon-btn" data-close aria-label="Close"><span data-icon="close"></span></button>
+        </header>
+        <div class="dlg-body">
+          <table class="keys">
+            <tbody>
+              <tr><th><kbd>/</kbd> or start typing</th><td>Search</td></tr>
+              <tr><th><kbd>Enter</kbd></th><td>Open the highlighted match or the focused bookmark</td></tr>
+              <tr><th><kbd>Alt</kbd> + <kbd>Enter</kbd> or click</th><td>Open in a private window</td></tr>
+              <tr><th><kbd>Shift</kbd> + <kbd>Enter</kbd> or click</th><td>Open in a new window</td></tr>
+              <tr><th><kbd>Ctrl</kbd> + <kbd>Enter</kbd> or click</th><td>Open in a background tab (<kbd>⌘</kbd> on Mac)</td></tr>
+              <tr><th><kbd>↑</kbd> <kbd>↓</kbd></th><td>Move between bookmarks</td></tr>
+              <tr><th><kbd>←</kbd> <kbd>→</kbd></th><td>Move sideways: to the next column, group or tile, or back to the group list in Sidebar</td></tr>
+              <tr><th><kbd>Alt</kbd> + <kbd>↑</kbd> <kbd>↓</kbd></th><td>Move a bookmark up or down in its group</td></tr>
+              <tr><th><kbd>F2</kbd></th><td>Edit the focused bookmark</td></tr>
+              <tr><th><kbd>Delete</kbd></th><td>Delete the focused bookmark (you can undo)</td></tr>
+              <tr><th><kbd>Esc</kbd></th><td>Clear the search</td></tr>
+              <tr data-mode="extension"><th><kbd>bm</kbd> + <kbd>Space</kbd></th><td>Search from <span data-b="name">Chrome</span>'s address bar</td></tr>
+              <tr data-mode="web" hidden><th><kbd>bm</kbd> + <kbd>Space</kbd></th><td>Search from the address bar, once it’s set up in Settings</td></tr>
+            </tbody>
+          </table>
+          <ul class="shortcut-list" data-shortcuts></ul>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,278 @@
+/* Shared design tokens for the app page and the toolbar popup.
+   Layout: a launcher, not a document. Groups sit in evenly filled columns; each row is
+   favicon, name, site, then a fixed rail of open-behavior glyphs on the right edge.
+   Group pills reuse Chrome's tab-group colors so a group looks the same here and as a tab group.
+   Type: Atkinson Hyperlegible Next throughout; it keeps l/I/1 and O/0 distinct in names and URLs. */
+
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('../fonts/atkinson-hyperlegible-next-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('../fonts/atkinson-hyperlegible-next-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('../fonts/atkinson-hyperlegible-next-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  --font: 'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --bg: #eceef1;
+  --panel: #ffffff;
+  --panel-2: #f5f6f8;
+  --ink: #1b2127;
+  --muted: #5e6873;
+  --faint: #8e97a1;
+  --line: #d8dce1;
+  --hover: #eef0f3;
+  --accent: #2457c5;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4ebfa;
+  --private: #6a4bd6;
+  --danger: #b3261e;
+  --mark: #fde68a;
+  --mark-ink: #1b2127;
+  --shadow: 0 8px 28px rgba(27, 33, 39, 0.16), 0 1px 3px rgba(27, 33, 39, 0.12);
+  --scrim: rgba(27, 33, 39, 0.38);
+
+  /* Chrome tab-group colors (light theme) */
+  --g-grey: #5f6368;   --g-grey-ink: #ffffff;
+  --g-blue: #1a73e8;   --g-blue-ink: #ffffff;
+  --g-red: #d93025;    --g-red-ink: #ffffff;
+  --g-yellow: #f9ab00; --g-yellow-ink: #202124;
+  --g-green: #188038;  --g-green-ink: #ffffff;
+  --g-pink: #d01884;   --g-pink-ink: #ffffff;
+  --g-purple: #a142f4; --g-purple-ink: #ffffff;
+  --g-cyan: #007b83;   --g-cyan-ink: #ffffff;
+  --g-orange: #fa903e; --g-orange-ink: #202124;
+
+  --r-panel: 12px;
+  --r-row: 7px;
+  --r-control: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #15181c;
+    --panel: #1e2227;
+    --panel-2: #23282e;
+    --ink: #e5e8ec;
+    --muted: #a1a9b3;
+    --faint: #6f7883;
+    --line: #2f353c;
+    --hover: #282d34;
+    --accent: #8ab0ff;
+    --accent-ink: #10213f;
+    --accent-soft: #24304a;
+    --private: #b9a8ff;
+    --danger: #f2b8b5;
+    --mark: #5c4a12;
+    --mark-ink: #fff4cf;
+    --shadow: 0 10px 32px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+    --scrim: rgba(0, 0, 0, 0.55);
+
+    --g-grey: #dadce0;   --g-grey-ink: #202124;
+    --g-blue: #8ab4f8;   --g-blue-ink: #202124;
+    --g-red: #f28b82;    --g-red-ink: #202124;
+    --g-yellow: #fdd663; --g-yellow-ink: #202124;
+    --g-green: #81c995;  --g-green-ink: #202124;
+    --g-pink: #ff8bcb;   --g-pink-ink: #202124;
+    --g-purple: #d7aefb; --g-purple-ink: #202124;
+    --g-cyan: #78d9ec;   --g-cyan-ink: #202124;
+    --g-orange: #fcad70; --g-orange-ink: #202124;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #15181c;
+  --panel: #1e2227;
+  --panel-2: #23282e;
+  --ink: #e5e8ec;
+  --muted: #a1a9b3;
+  --faint: #6f7883;
+  --line: #2f353c;
+  --hover: #282d34;
+  --accent: #8ab0ff;
+  --accent-ink: #10213f;
+  --accent-soft: #24304a;
+  --private: #b9a8ff;
+  --danger: #f2b8b5;
+  --mark: #5c4a12;
+  --mark-ink: #fff4cf;
+  --shadow: 0 10px 32px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --scrim: rgba(0, 0, 0, 0.55);
+
+  --g-grey: #dadce0;   --g-grey-ink: #202124;
+  --g-blue: #8ab4f8;   --g-blue-ink: #202124;
+  --g-red: #f28b82;    --g-red-ink: #202124;
+  --g-yellow: #fdd663; --g-yellow-ink: #202124;
+  --g-green: #81c995;  --g-green-ink: #202124;
+  --g-pink: #ff8bcb;   --g-pink-ink: #202124;
+  --g-purple: #d7aefb; --g-purple-ink: #202124;
+  --g-cyan: #78d9ec;   --g-cyan-ink: #202124;
+  --g-orange: #fcad70; --g-orange-ink: #202124;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.ic {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  background: var(--panel);
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover {
+  background: var(--hover);
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.btn.primary:hover {
+  filter: brightness(1.06);
+}
+.btn.danger {
+  color: var(--danger);
+}
+.btn.quiet {
+  border-color: transparent;
+  background: transparent;
+}
+.btn.quiet:hover {
+  background: var(--hover);
+}
+.btn[aria-pressed='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.icon-btn:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+/* Form fields */
+.field {
+  display: grid;
+  gap: 5px;
+}
+.field > span {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.input,
+.select,
+.textarea {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  background: var(--panel);
+  color: var(--ink);
+}
+.textarea {
+  height: auto;
+  min-height: 64px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+.hint {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

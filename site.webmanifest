@@ -1,0 +1,14 @@
+{
+  "name": "Shelfmark",
+  "short_name": "Shelfmark",
+  "description": "Grouped bookmarks that open the way you want.",
+  "start_url": "app.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eceef1",
+  "theme_color": "#2457c5",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
