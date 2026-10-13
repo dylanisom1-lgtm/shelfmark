@@ -1615,3 +1615,494 @@ body.in-setup .actions {
 .bookmarklet .ic {
   color: var(--accent);
 }
+
+/* ===== Widgets ============================================================
+   Beside the bookmarks on wide screens (a 340px column on the right), below them on
+   narrower screens and in Launcher, so the bookmarks always come first. */
+:root {
+  --mono: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Consolas, 'SF Mono', Menlo, monospace;
+}
+.page {
+  max-width: 1720px;
+  margin: 0 auto;
+}
+/* Full width of their column even beside the widgets (auto margins in a grid would shrink them) */
+.page > .grid,
+.page > .empty {
+  width: 100%;
+}
+.widgets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  align-items: start;
+  gap: 16px;
+  padding: 0 24px 80px;
+}
+body.has-widgets .grid {
+  padding-bottom: 24px;
+}
+body.has-widgets .empty {
+  margin-bottom: 32px;
+}
+body.layout-launcher .widgets {
+  max-width: 728px;
+  margin: 0 auto;
+}
+@media (min-width: 1100px) {
+  body.has-widgets:not(.layout-launcher) .page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    align-items: start;
+  }
+  body.has-widgets:not(.layout-launcher) .page > .grid,
+  body.has-widgets:not(.layout-launcher) .page > .empty {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+  body.has-widgets:not(.layout-launcher) .grid {
+    padding-bottom: 80px;
+  }
+  body.has-widgets:not(.layout-launcher) .widgets {
+    grid-column: 2;
+    grid-row: 1;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 4px 24px 80px 0;
+  }
+}
+@media (max-width: 760px) {
+  .widgets {
+    padding: 0 16px 80px;
+  }
+}
+
+.widget {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 14px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--panel);
+}
+.w-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+.w-head h2 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.w-tools {
+  display: flex;
+  gap: 4px;
+  margin-right: -6px;
+}
+.w-body,
+.w-out {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.btn.small {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+.input.small,
+.select.small {
+  height: 30px;
+  font-size: 13px;
+}
+.input.code {
+  font-family: var(--mono);
+  font-size: 13.5px;
+}
+.w-hint,
+.w-error,
+.w-note,
+.w-foot {
+  margin: 0;
+  font-size: 12.5px;
+}
+.w-hint {
+  color: var(--muted);
+}
+.w-error {
+  color: var(--danger);
+}
+.w-note {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  font-size: 13px;
+}
+.w-foot {
+  color: var(--faint);
+}
+.w-big .kv-val {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.w-lines {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 13px;
+}
+.w-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: -4px -6px -6px 0;
+}
+.w-status {
+  color: var(--faint);
+  font-size: 12px;
+}
+.check.small {
+  font-size: 13px;
+}
+.seg.small span {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+/* Values that copy when clicked */
+.kvs {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  gap: 3px 12px;
+  margin: 0;
+}
+.kv {
+  display: contents;
+}
+.kv dt {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.kv dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+  min-width: 0;
+  margin: 0;
+}
+.kv-val {
+  position: relative;
+  max-width: 100%;
+  margin: 0 -4px;
+  padding: 1px 4px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: copy;
+}
+.kv-val:hover {
+  background: var(--hover);
+}
+.kv-val.code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+.kv-val.small {
+  font-size: 12.5px;
+}
+.kv-text {
+  font-size: 13px;
+}
+.kv-extra {
+  color: var(--faint);
+  font-size: 12px;
+}
+.flashed {
+  position: relative;
+}
+.flashed::after {
+  content: attr(data-flash);
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--toast-bg);
+  color: var(--toast-ink);
+  font: 600 12px/1.5 var(--font);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Clocks */
+.clk-now {
+  display: flex;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+.clk-now .hm {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+.clk-now .ss {
+  color: var(--muted);
+  font-size: 17px;
+  font-weight: 600;
+}
+.clk-now .ss::before {
+  content: ':';
+}
+.clk-now .ap {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+.clk-sub {
+  color: var(--muted);
+  font-size: 13px;
+}
+.clk-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.clk-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  border-top: 1px solid var(--line);
+}
+.clk-list.editing .clk-row {
+  grid-template-columns: minmax(0, 1fr) auto auto 28px;
+  min-height: 40px;
+}
+.clk-name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.clk-meta {
+  color: var(--faint);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.clk-t {
+  min-width: 4.4em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+.clk-rename {
+  min-width: 0;
+}
+.clk-editor {
+  display: grid;
+  gap: 10px;
+}
+.clk-add {
+  display: flex;
+  gap: 8px;
+}
+.clk-add .input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Date math */
+.dm-mode {
+  justify-self: start;
+}
+.dm-pane {
+  display: grid;
+  gap: 8px;
+}
+.dm-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 8px;
+}
+.dm-amount {
+  display: grid;
+  grid-template-columns: auto minmax(64px, 1fr) auto;
+  gap: 6px;
+}
+input[type='date'].input {
+  padding: 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scratchpad */
+.scratch {
+  min-height: 132px;
+  max-height: 440px;
+  overflow-y: auto;
+  line-height: 1.45;
+  resize: none;
+}
+
+/* Timestamp converter */
+.ts-now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+.ts-now-label {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.ts-now .kv-val {
+  margin: 0;
+}
+.ts-read {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.ts-read .select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The calculator's answer, above the search results */
+.answer {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-panel);
+  background: var(--panel);
+}
+.grid.view-sidebar .answer,
+.grid.view-table .answer,
+.grid.view-launcher .answer {
+  margin-bottom: 14px;
+}
+.answer-expr {
+  color: var(--muted);
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.answer-val {
+  margin: 0 -4px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  cursor: copy;
+}
+.answer-val:hover {
+  background: var(--hover);
+}
+.answer-alt {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 14px;
+}
+.answer-hint {
+  margin-left: auto;
+  color: var(--faint);
+  font-size: 12.5px;
+}
+.answer.error {
+  border-color: var(--line);
+}
+.answer-error {
+  color: var(--danger);
+}
+
+/* Settings › Widgets */
+.widget-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.wl-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 8px 9px 12px;
+}
+.wl-item + .wl-item {
+  border-top: 1px solid var(--line);
+}
+.wl-main {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  cursor: pointer;
+}
+.wl-main input {
+  flex: none;
+  margin: 3px 0 0;
+}
+.wl-main strong {
+  font-weight: 600;
+}
+.wl-main .hint {
+  display: block;
+}
+.wl-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-size: 11.5px;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+.wl-move {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+.wl-move .icon-btn[disabled] {
+  opacity: 0.3;
+  cursor: default;
+}
+.dm-two > .field,
+.dm-amount > * {
+  min-width: 0;
+}
+input[type='date'].input {
+  min-width: 0;
+}

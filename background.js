@@ -2,8 +2,9 @@
 // right-click menu, address-bar keyword, keyboard command, opening at start-up.
 
 import { loadDoc, mutate, loadStats, recordOpen, DOC_KEY } from './lib/store.js';
-import { newGroup, newBookmark, findByUrl, groupOf, fallbackTitle, displayHost, MODES, effective, isValidUrl } from './lib/model.js';
+import { newGroup, newBookmark, findByUrl, groupOf, fallbackTitle, displayHost, MODES, effective, isValidUrl, widgetOn } from './lib/model.js';
 import { searchDoc } from './lib/search.js';
+import { evaluate } from './lib/calc.js';
 import { openUrl, openAppTab, OpenError } from './lib/open.js';
 import { ext, B } from './lib/browser.js';
 
@@ -97,6 +98,12 @@ ext.omnibox.onInputChanged.addListener(async (text, suggest) => {
     ext.omnibox.setDefaultSuggestion({ description: 'Search Shelfmark bookmarks' });
     return suggest([]);
   }
+  // A sum shows its answer right in the address bar; Enter opens Shelfmark to copy it.
+  const sum = widgetOn(doc.settings, 'calc') ? evaluate(text) : null;
+  if (sum && !sum.error) {
+    ext.omnibox.setDefaultSuggestion({ description: `${B.richOmnibox ? esc(sum.expr) : sum.expr} = ${tag('match', sum.text)}  ${tag('dim', 'Enter to copy it in Shelfmark')}` });
+    return suggest([]);
+  }
   if (!hits.length) {
     ext.omnibox.setDefaultSuggestion({ description: `No bookmarks match ${tag('match', text)}. Press Enter to search in Shelfmark.` });
     return suggest([]);
@@ -107,6 +114,10 @@ ext.omnibox.onInputChanged.addListener(async (text, suggest) => {
 
 ext.omnibox.onInputEntered.addListener(async (text, disposition) => {
   const doc = await loadDoc();
+  if (widgetOn(doc.settings, 'calc')) {
+    const sum = evaluate(text);
+    if (sum && !sum.error) return openAppTab(text);
+  }
   const stats = await loadStats();
   const top = searchDoc(doc, text, stats)[0];
   const bm = findByUrl(doc, text) || (top && doc.bookmarks[top.id]);

@@ -103,6 +103,7 @@
       </footer>
     </section>
 
+    <div class="page">
     <main id="grid" class="grid" aria-label="Bookmarks"></main>
 
     <section id="empty" class="empty" hidden>
@@ -114,6 +115,9 @@
       </div>
       <p class="hint">To get a bookmarks file from <span data-b="name">Chrome</span>, <span data-b="exportSteps">open the Bookmark manager (Ctrl+Shift+O), click the ⋮ menu, and choose Export bookmarks</span>.</p>
     </section>
+
+    <aside id="widgets" class="widgets" aria-label="Widgets" hidden></aside>
+    </div>
 
     <div id="toasts" class="toasts" aria-live="polite"></div>
 
@@ -208,6 +212,11 @@
             <h3>Layout</h3>
             <p data-layout-current></p>
             <button type="button" class="btn" data-menu="layout">Change layout</button>
+          </section>
+          <section>
+            <h3>Widgets</h3>
+            <p class="hint">Widgets sit beside your bookmarks on wide screens, and below them on narrow screens and in Launcher. The arrows set their order.</p>
+            <ul class="widget-list" data-widget-list></ul>
           </section>
           <section data-mode="extension">
             <h3>When <span data-b="name">Chrome</span> starts</h3>
@@ -361,6 +370,7 @@
               <tr><th><kbd>F2</kbd></th><td>Edit the focused bookmark</td></tr>
               <tr><th><kbd>Delete</kbd></th><td>Delete the focused bookmark (you can undo)</td></tr>
               <tr><th><kbd>Esc</kbd></th><td>Clear the search</td></tr>
+              <tr data-calc-help><th>A sum, like <kbd>1450*1.06</kbd></th><td>Shows the answer above your bookmarks. <kbd>Enter</kbd> copies it. Start with <kbd>=</kbd> to always treat it as a sum</td></tr>
               <tr data-mode="extension"><th><kbd>bm</kbd> + <kbd>Space</kbd></th><td>Search from <span data-b="name">Chrome</span>'s address bar</td></tr>
               <tr data-mode="web" hidden><th><kbd>bm</kbd> + <kbd>Space</kbd></th><td>Search from the address bar, once it’s set up in Settings</td></tr>
             </tbody>

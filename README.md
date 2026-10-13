@@ -2,7 +2,7 @@
 
 Grouped bookmarks that open the way you want: in a private window, a new window, an app window without toolbars, a background tab, or by switching to the tab if it's already open.
 
-Version 0.4.0. The same files run two ways:
+Version 0.5.0. The same files run two ways:
 
 - **As a website on GitHub Pages.** Nothing to install; works in any browser. A web page can't do everything an extension can (see the table below).
 - **As a browser extension** in Chrome 121+, Edge 121+ and Firefox 140+, with every feature.
@@ -22,6 +22,7 @@ Chrome and Edge can also install the site as an app with its own window and task
 | | Website | Extension |
 | --- | --- | --- |
 | Layouts, groups, search, keyboard, import/export | Yes | Yes |
+| Widgets and the search-box calculator | Yes | Yes |
 | New tab, same tab, app window | Yes | Yes |
 | New window | A separate window without tabs (or Shift-click a link) | Yes |
 | Background tab | Ctrl-click or middle-click a link | Yes |
@@ -116,6 +117,21 @@ Switch from the ⋯ menu › **Layout…**. Every layout shares the same search,
 
 In Edit mode you can drag bookmarks and groups in Columns, List, Tiles and Sidebar. In Sidebar, drop a bookmark on a group name to move it there.
 
+## Widgets
+
+Turn widgets on in **Settings › Widgets**. The arrows there set their order. On wide screens they sit in a column to the right of your bookmarks; on narrower screens, and in Launcher, they go below the bookmarks so the bookmarks stay first.
+
+| Widget | What it does |
+| --- | --- |
+| Calculator | Type a sum in the search box, like `1450*1.06`, `15% of 80`, `1450 + 6%`, `2^40`, `sqrt(2)` or `255 in hex`. The answer appears above your bookmarks and `Enter` copies it. Ordinary searches never show an answer; start with `=` to treat anything as a sum and see what's wrong with it. In the extension, `bm 1450*1.06` shows the answer in the address bar. On by default. |
+| Clocks | Your time, UTC, and any cities or time zones you add, with the difference from your time and "Tomorrow" or "Yesterday" when the date differs. **Edit** adds, renames and removes them and switches between 12- and 24-hour. |
+| Date math | Days between two dates, with months, weeks and weekdays (Monday to Friday), or a date plus or minus days, weeks, months, years or weekdays. Shows today's week number and day of the year. |
+| Scratchpad | A plain-text note that saves as you type. Another Shelfmark tab picks up the change. **Clear** can be undone. |
+| Subnet calculator | `10.20.0.0/22`, `192.168.1.10 255.255.255.0`, a wildcard mask, or an IPv6 prefix like `2001:db8::/48`. Shows network, mask, wildcard, broadcast, usable range, host count and the kind of range (private, CGNAT, link-local and so on). `↑` `↓` in the box change the prefix. |
+| Timestamp converter | Unix time in seconds, milliseconds, microseconds or nanoseconds, Active Directory / Windows FILETIME (`lastLogonTimestamp`, `pwdLastSet`, `accountExpires`), LDAP time (`whenCreated`), or a written date. It guesses the kind from the number of digits; **Read as** overrides it. Shows your time, UTC, ISO 8601 and every other form. |
+
+Click any result to copy it. Everything runs in the page, so nothing you type in a widget is sent anywhere. What the widgets hold (clock list, scratchpad, last inputs) is saved in the browser with your bookmarks and included in backups.
+
 ## Opening Shelfmark when the browser starts
 
 Turn it on during setup or in **Settings › When … starts**. When the browser starts, Shelfmark takes the place of the empty new tab; if the browser reopens your previous tabs, Shelfmark is added in front of them; if a Shelfmark tab is already there, it's brought forward. This also happens when you open the first window after closing them all while the browser kept running in the background.
@@ -155,7 +171,7 @@ From the address bar, private, new-window and app-window bookmarks keep their be
 
 ## Keyboard on the main page
 
-`/` or just start typing to search. `Enter` opens the highlighted match. `↑` `↓` move between bookmarks, `←` `→` move sideways (the next column in Columns, the next group in List, the next tile in Tiles, back to the group list in Sidebar), `Alt+↑` `Alt+↓` reorder, `F2` edits, `Delete` deletes (with undo), `Esc` clears the search, `?` lists all of these.
+`/` or just start typing to search. `Enter` opens the highlighted match, or copies the answer when you've typed a sum. `↑` `↓` move between bookmarks, `←` `→` move sideways (the next column in Columns, the next group in List, the next tile in Tiles, back to the group list in Sidebar), `Alt+↑` `Alt+↓` reorder, `F2` edits, `Delete` deletes (with undo), `Esc` clears the search, `?` lists all of these.
 
 Search matches names, sites, tags, notes, group names, paths and open behavior, so `private` lists every bookmark that opens privately.
 
@@ -163,7 +179,7 @@ Search matches names, sites, tags, notes, group names, paths and open behavior, 
 
 Everything lives in `chrome.storage.local` in this browser profile. Nothing is sent anywhere.
 
-- **Export backup** (⋯ menu or Settings) downloads a JSON file with every group, bookmark, setting and open count.
+- **Export backup** (⋯ menu or Settings) downloads a JSON file with every group, bookmark, setting and open count, and what the widgets hold.
 - **Import** accepts a Shelfmark backup (add to what's there, or replace everything) or the bookmarks HTML file that Chrome, Firefox, Edge and Safari export. Each folder becomes a group. Every import can be undone from the toast that follows.
 
 ## Permissions
@@ -192,6 +208,10 @@ lib/store.js       Storage, change events, open counts
 lib/open.js        Opening links, groups, private windows, tab reuse
 lib/search.js      Fuzzy search used by the page and the address bar
 lib/importers.js   Backup and bookmarks-HTML import/export
+js/widgets.js      The widget panel: clocks, date math, scratchpad, subnet, timestamps
+lib/calc.js        The search box's calculator (a parser; no eval)
+lib/subnet.js      IPv4 and IPv6 subnet math
+lib/timetools.js   Timestamp reading and date arithmetic
 lib/browser.js     Extension, website or preview; which browser; its names for things
 index.html         Website entry point; forwards to app.html
 site.webmanifest   Lets Chrome and Edge install the website as an app

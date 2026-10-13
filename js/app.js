@@ -2,10 +2,14 @@
 
 import {
   MODES, MODE_ORDER, COLORS, COLOR_LABELS, emptyDoc, groupDefaults, groupOf,
-  newGroup, newBookmark, nextColor, cleanUrl, isValidUrl, displayHost, fallbackTitle, findByUrl, clone,
+  newGroup, newBookmark, nextColor, cleanUrl, isValidUrl, displayHost, fallbackTitle, findByUrl, clone, widgetOn,
 } from '../lib/model.js';
-import { loadDoc, loadStats, mutate, onStoreChange, replaceDoc, replaceStats, getKey, setKey, recordOpen, IS_EXTENSION, IS_WEB, STORAGE_AVAILABLE } from '../lib/store.js';
+import {
+  loadDoc, loadStats, mutate, onStoreChange, replaceDoc, replaceStats, getKey, setKey, recordOpen,
+  loadWidgetData, replaceWidgetData, IS_EXTENSION, IS_WEB, STORAGE_AVAILABLE,
+} from '../lib/store.js';
 import { searchDoc } from '../lib/search.js';
+import { evaluate } from '../lib/calc.js';
 import { openBookmark, openGroup, incognitoAllowed, OpenError } from '../lib/open.js';
 import { ext, B, MODE, siteBase, lowerFirst, canOpenExtensionSettings, canOpenShortcutSettings, openExtensionSettings, openShortcutSettings } from '../lib/browser.js';
 import { ICONS } from '../lib/icons.js';
@@ -13,6 +17,7 @@ import { exportPayload, backupFilename, downloadJson, parseImportText, mergeInto
 import { escHtml, modeLabel, setIconSource } from './ui.js';
 import { VIEWS, LAYOUTS, SORTS, layoutPickerHtml } from './views.js';
 import { createSetup } from './setup.js';
+import { createWidgetPanel, WIDGETS } from './widgets.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -29,6 +34,7 @@ const state = {
   incognitoOK: true,
   bestId: null,
   results: [],
+  calc: null, // the calculator's answer to the current search, if it's a sum
   view: { sidebarGroup: null, sort: { key: 'arrange', dir: 1 } }, // per-browser view state
   selected: new Set(), // table selection
 };
@@ -36,6 +42,7 @@ const state = {
 const grid = $('#grid');
 const searchInput = $('#q');
 const layout = () => state.doc.settings.layout;
+const panel = createWidgetPanel({ root: $('#widgets'), toast, copyText });
 
 function usesPrivate(doc) {
   if (doc.settings.defaultMode === 'private') return true;
@@ -104,11 +111,15 @@ function render() {
     $('#empty').hidden = true;
     $('#notice').hidden = true;
     grid.hidden = true;
+    panel.render(doc.settings, { show: false });
     setup.show();
     return;
   }
   if (setup.visible) setup.hide();
   renderNotice();
+  panel.render(doc.settings);
+  const calcOn = widgetOn(doc.settings, 'calc');
+  searchInput.placeholder = calcOn ? 'Search bookmarks, or type a sum' : 'Search bookmarks';
 
   const lay = layout();
   const q = state.query.trim();
@@ -122,7 +133,11 @@ function render() {
     state.results = searchDoc(doc, q, state.stats);
     matches = new Map(state.results.map((r) => [r.id, r]));
   }
-  state.bestId = state.results.length ? state.results[0].id : null;
+  // A sum takes Enter (to copy its answer), so no bookmark is marked as the Enter target.
+  state.calc = q && calcOn ? evaluate(q) : null;
+  const calcOk = !!(state.calc && !state.calc.error);
+  state.bestId = state.results.length && !calcOk ? state.results[0].id : null;
+  const answer = state.calc ? answerHtml(state.calc, q) : '';
 
   const editing = state.editing && lay !== 'launcher';
   $('#edit-btn').hidden = lay === 'launcher';
@@ -135,7 +150,7 @@ function render() {
     return;
   }
   if (q && !state.results.length) {
-    grid.innerHTML = `<p class="no-results">Nothing matches <strong>${escHtml(q)}</strong>. Search covers names, sites, tags, notes, group names and how links open (try “private”).</p>`;
+    grid.innerHTML = answer || `<p class="no-results">Nothing matches <strong>${escHtml(q)}</strong>. Search covers names, sites, tags, notes, group names and how links open (try “private”).</p>`;
     return;
   }
 
@@ -156,7 +171,7 @@ function render() {
     state.view.sidebarGroup = out.selectedId;
     saveView();
   }
-  grid.innerHTML = out.html;
+  grid.innerHTML = answer + out.html;
 
   if (focusedId) {
     const el = grid.querySelector(`a.link[data-id="${focusedId}"]`);
@@ -165,6 +180,25 @@ function render() {
     const el = grid.querySelector(`.navitem[data-gid="${focusedNav}"] .navbtn`);
     if (el) el.focus({ preventScroll: true });
   }
+}
+
+function answerHtml(c, q) {
+  if (c.error) {
+    return `<div class="answer error" role="status"><span class="answer-expr">${escHtml(q)}</span><span class="answer-error">${escHtml(c.error)}</span></div>`;
+  }
+  return `<div class="answer" role="status">
+    <span class="answer-expr">${escHtml(c.expr)} =</span>
+    <button type="button" class="answer-val" data-act="copy-answer" title="Copy">${escHtml(c.text)}</button>
+    ${c.alt ? `<span class="answer-alt">${escHtml(c.alt)}</span>` : ''}
+    <span class="answer-hint"><kbd>Enter</kbd> copies</span>
+  </div>`;
+}
+
+async function copyAnswer() {
+  const c = state.calc;
+  if (!c || c.error) return;
+  const ok = await copyText(c.copy);
+  toast(ok ? `Copied ${c.copy}` : 'Couldn’t copy. Select the answer and copy it instead.');
 }
 
 // Broken favicons fall back to a lettered tile.
@@ -541,7 +575,8 @@ document.addEventListener('keydown', (e) => {
   if (t === searchInput) {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (state.bestId) launch(state.bestId, overrideFromEvent(e));
+      if (state.calc && !state.calc.error) copyAnswer();
+      else if (state.bestId) launch(state.bestId, overrideFromEvent(e));
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       const best = state.bestId && grid.querySelector(`a.link[data-id="${state.bestId}"]`);
@@ -676,6 +711,7 @@ grid.addEventListener('click', (e) => {
   if (actEl) {
     const act = actEl.dataset.act;
     const row = actEl.closest('.row');
+    if (act === 'copy-answer') return copyAnswer();
     if (act === 'edit' && row) return openBookmarkDialog(row.dataset.id);
     if (act === 'collapse' && gid) {
       if (state.query || layout() === 'sidebar') return;
@@ -1315,6 +1351,7 @@ async function openSettings() {
 
   $$('input[name="siteIcons"]', settingsDialog).forEach((r) => (r.checked = r.value === s.siteIcons));
   fillWebAddresses(settingsDialog);
+  renderWidgetList();
 
   const status = $('[data-incognito-status]', settingsDialog);
   if (!IS_EXTENSION) {
@@ -1336,6 +1373,54 @@ settingsDialog.addEventListener('change', (e) => {
   if (t.name === 'theme') commit((doc) => (doc.settings.theme = t.value));
   if (t.name === 'openOnStartup') commit((doc) => (doc.settings.openOnStartup = t.checked));
   if (t.name === 'siteIcons') commit((doc) => (doc.settings.siteIcons = t.value));
+  if (t.dataset.widgetToggle) {
+    commit((doc) => {
+      const w = doc.settings.widgets.find((x) => x.id === t.dataset.widgetToggle);
+      if (w) w.on = t.checked;
+    });
+  }
+});
+
+// The calculator works in the search box, so it's listed first and has no place in the order.
+function renderWidgetList() {
+  const list = $('[data-widget-list]', settingsDialog);
+  const ws = state.doc.settings.widgets;
+  const inPanel = ws.filter((w) => !WIDGETS[w.id].inSearch);
+  const item = (w, i) => {
+    const def = WIDGETS[w.id];
+    const name = escHtml(def.name);
+    const move = def.inSearch
+      ? ''
+      : `<span class="wl-move">
+          <button type="button" class="icon-btn" data-widget-move="${w.id}" data-dir="-1" aria-label="Move ${name} up" title="Move up" ${i === 0 ? 'disabled' : ''}>${ICONS.up}</button>
+          <button type="button" class="icon-btn" data-widget-move="${w.id}" data-dir="1" aria-label="Move ${name} down" title="Move down" ${i === inPanel.length - 1 ? 'disabled' : ''}>${ICONS.down}</button>
+        </span>`;
+    return `<li class="wl-item" data-wid="${w.id}">
+      <label class="wl-main"><input type="checkbox" data-widget-toggle="${w.id}" ${w.on ? 'checked' : ''} />
+        <span><strong>${name}</strong>${def.inSearch ? '<span class="wl-tag">In the search box</span>' : ''}<span class="hint">${escHtml(def.blurb)}</span></span>
+      </label>${move}
+    </li>`;
+  };
+  list.innerHTML = ws.filter((w) => WIDGETS[w.id].inSearch).map((w) => item(w, -1)).join('') + inPanel.map(item).join('');
+}
+
+settingsDialog.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-widget-move]');
+  if (!b || b.disabled) return;
+  const id = b.dataset.widgetMove;
+  const dir = Number(b.dataset.dir);
+  await commit((doc) => {
+    const ws = doc.settings.widgets;
+    const slots = ws.map((w, i) => (WIDGETS[w.id].inSearch ? -1 : i)).filter((i) => i >= 0);
+    const pos = slots.findIndex((i) => ws[i].id === id);
+    const other = slots[pos + dir];
+    if (pos < 0 || other === undefined) return;
+    [ws[slots[pos]], ws[other]] = [ws[other], ws[slots[pos]]];
+  });
+  renderWidgetList();
+  const same = $(`[data-widget-move="${id}"][data-dir="${dir}"]`, settingsDialog);
+  const flip = $(`[data-widget-move="${id}"][data-dir="${-dir}"]`, settingsDialog);
+  (same && !same.disabled ? same : flip).focus();
 });
 
 // --- website: addresses for home page, site search and the save button -------------
@@ -1373,6 +1458,7 @@ document.addEventListener('click', async (e) => {
 
 function openHelp() {
   fillShortcuts();
+  $('[data-calc-help]').hidden = !widgetOn(state.doc.settings, 'calc');
   $('#help-dialog').showModal();
 }
 
@@ -1384,7 +1470,7 @@ async function exportBackup() {
   }
   const doc = await loadDoc();
   const stats = await loadStats();
-  downloadJson(exportPayload(doc, stats), backupFilename());
+  downloadJson(exportPayload(doc, stats, await loadWidgetData()), backupFilename());
   toast('Backup downloaded');
 }
 
@@ -1441,11 +1527,17 @@ importForm.addEventListener('submit', async (e) => {
   const skipDuplicates = f.skipDupes.checked;
   const beforeDoc = await loadDoc();
   const beforeStats = await loadStats();
+  const beforeWidgets = await loadWidgetData();
+  const widgetsReplaced = replace && !!parsedImport.widgets;
   importDialog.close('import');
 
   const undo = async () => {
     await replaceDoc(beforeDoc);
     await replaceStats(beforeStats);
+    if (widgetsReplaced) {
+      await replaceWidgetData(beforeWidgets);
+      await panel.refresh();
+    }
     state.doc = await loadDoc();
     state.stats = await loadStats();
     render();
@@ -1460,6 +1552,10 @@ importForm.addEventListener('submit', async (e) => {
     incoming.settings.setupDone = beforeDoc.settings.setupDone;
     await replaceDoc(incoming);
     await replaceStats(parsedImport.stats);
+    if (widgetsReplaced) {
+      await replaceWidgetData(parsedImport.widgets);
+      await panel.refresh();
+    }
     state.doc = await loadDoc();
     state.stats = await loadStats();
     render();
@@ -1483,6 +1579,7 @@ const setup = createSetup({
 
 // --- live updates from other tabs, the popup and the right-click menu ---------
 onStoreChange(async (what) => {
+  if (what.widgets) panel.refresh();
   if (what.doc) state.doc = await loadDoc();
   if (what.stats) state.stats = await loadStats();
   if (what.doc || layout() === 'table' || layout() === 'launcher' || layout() === 'list') render();
@@ -1546,6 +1643,8 @@ async function init() {
   setIcons();
   applyBrowserText();
   $('.search-ic').innerHTML = ICONS.search;
+  // Widget contents first: once state.doc is set, anything (even a resize) may render.
+  await panel.load();
   state.doc = await loadDoc();
   state.stats = await loadStats();
   try {

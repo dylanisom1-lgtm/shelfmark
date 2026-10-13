@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Shelfmark",
   "short_name": "Shelfmark",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Grouped bookmarks that open the way you want: private windows, tab groups, app windows, and switching to tabs already open.",
   "minimum_chrome_version": "121",
   "incognito": "spanning",
