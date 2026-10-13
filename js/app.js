@@ -18,6 +18,7 @@ import { escHtml, modeLabel, setIconSource } from './ui.js';
 import { VIEWS, LAYOUTS, SORTS, layoutPickerHtml } from './views.js';
 import { createSetup } from './setup.js';
 import { createWidgetPanel, WIDGETS } from './widgets.js';
+import { ago as agoText } from './wkit.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -42,7 +43,37 @@ const state = {
 const grid = $('#grid');
 const searchInput = $('#q');
 const layout = () => state.doc.settings.layout;
-const panel = createWidgetPanel({ root: $('#widgets'), toast, copyText });
+const panel = createWidgetPanel({ root: $('#widgets'), toast, copyText, onAlerts: setAlerts });
+
+// --- alerts from live widgets (outages) ----------------------------------------------
+const alertSets = new Map();
+function setAlerts(widgetId, list) {
+  alertSets.set(widgetId, list);
+  renderAlerts();
+}
+function renderAlerts() {
+  const el = $('#alerts');
+  const all = [...alertSets.entries()].flatMap(([wid, list]) => list.map((a) => ({ ...a, wid })));
+  el.hidden = !all.length || !state.doc.settings.setupDone;
+  el.innerHTML = all
+    .map(
+      (a) => `<div class="alert lvl-${a.level}">
+        <span class="st-dot" aria-hidden="true"></span>
+        <p><strong>${escHtml(a.name)}</strong> ${a.level === 'down' ? 'outage' : 'problem'}: ${escHtml(a.text)}${
+          a.more ? ` <span class="alert-meta">and ${a.more} more</span>` : ''
+        }${a.state || a.updated ? ` <span class="alert-meta">${[a.state, a.updated ? agoText(a.updated) : ''].filter(Boolean).map(escHtml).join(' · ')}</span>` : ''}</p>
+        <a class="btn small" href="${escHtml(a.url)}" target="_blank" rel="noopener noreferrer">Details</a>
+        <button type="button" class="icon-btn" data-dismiss="${escHtml(a.wid)}|${escHtml(a.key)}|${escHtml(a.sig)}" aria-label="Dismiss the ${escHtml(a.name)} alert until it changes" title="Dismiss until it changes">${ICONS.close}</button>
+      </div>`,
+    )
+    .join('');
+}
+$('#alerts').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-dismiss]');
+  if (!b) return;
+  const [wid, key, ...rest] = b.dataset.dismiss.split('|');
+  panel.dismiss(wid, key, rest.join('|'));
+});
 
 function usesPrivate(doc) {
   if (doc.settings.defaultMode === 'private') return true;
@@ -118,6 +149,7 @@ function render() {
   if (setup.visible) setup.hide();
   renderNotice();
   panel.render(doc.settings);
+  renderAlerts();
   const calcOn = widgetOn(doc.settings, 'calc');
   searchInput.placeholder = calcOn ? 'Search bookmarks, or type a sum' : 'Search bookmarks';
 
@@ -1599,7 +1631,7 @@ if (MODE === 'preview') {
   const note = $('#preview-note');
   note.hidden = false;
   $$('[data-open-ext], [data-open-shortcuts]').forEach((b) => (b.hidden = true));
-  note.textContent = 'Preview with sample bookmarks. Links don’t open here; clicking one shows what the extension would do. Changes last until you reload.';
+  note.textContent = 'Preview with sample bookmarks. Links don’t open here; clicking one shows what the extension would do. Weather, outages and traffic show sample data. Changes last until you reload.';
   globalThis.__SHELFMARK_PREVIEW_OPEN__ = (info) => {
     if (info.kind === 'group') {
       const parts = [];

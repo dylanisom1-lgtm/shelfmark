@@ -2,7 +2,7 @@
 
 Grouped bookmarks that open the way you want: in a private window, a new window, an app window without toolbars, a background tab, or by switching to the tab if it's already open.
 
-Version 0.5.0. The same files run two ways:
+Version 0.6.0. The same files run two ways:
 
 - **As a website on GitHub Pages.** Nothing to install; works in any browser. A web page can't do everything an extension can (see the table below).
 - **As a browser extension** in Chrome 121+, Edge 121+ and Firefox 140+, with every feature.
@@ -23,6 +23,7 @@ Chrome and Edge can also install the site as an app with its own window and task
 | --- | --- | --- |
 | Layouts, groups, search, keyboard, import/export | Yes | Yes |
 | Widgets and the search-box calculator | Yes | Yes |
+| Outage feeds from Microsoft, Azure, AWS, Google, Slack | Only if the provider allows websites to read them | Yes, after you allow that site |
 | New tab, same tab, app window | Yes | Yes |
 | New window | A separate window without tabs (or Shift-click a link) | Yes |
 | Background tab | Ctrl-click or middle-click a link | Yes |
@@ -130,7 +131,37 @@ Turn widgets on in **Settings › Widgets**. The arrows there set their order. O
 | Subnet calculator | `10.20.0.0/22`, `192.168.1.10 255.255.255.0`, a wildcard mask, or an IPv6 prefix like `2001:db8::/48`. Shows network, mask, wildcard, broadcast, usable range, host count and the kind of range (private, CGNAT, link-local and so on). `↑` `↓` in the box change the prefix. |
 | Timestamp converter | Unix time in seconds, milliseconds, microseconds or nanoseconds, Active Directory / Windows FILETIME (`lastLogonTimestamp`, `pwdLastSet`, `accountExpires`), LDAP time (`whenCreated`), or a written date. It guesses the kind from the number of digits; **Read as** overrides it. Shows your time, UTC, ISO 8601 and every other form. |
 
-Click any result to copy it. Everything runs in the page, so nothing you type in a widget is sent anywhere. What the widgets hold (clock list, scratchpad, last inputs) is saved in the browser with your bookmarks and included in backups.
+Click any result to copy it. These six run entirely in the page, so nothing you type in them is sent anywhere.
+
+### Live widgets
+
+These three fetch data while Shelfmark is showing, and pause when its tab is in the background. They pick up again as soon as you come back. Several Shelfmark tabs share one set of results instead of each asking.
+
+| Widget | Source | Refreshes | What's sent |
+| --- | --- | --- | --- |
+| Weather | [Open-Meteo](https://open-meteo.com/), no key | Every 15 minutes | The coordinates of your saved places |
+| Outages | Each service's own status page or feed | Every 3 minutes | Nothing about you; it reads public status pages |
+| Traffic | Google's Routes API, with your own key | Every 5–60 minutes (10 by default), only in the hours you set | Your saved route addresses and your key |
+
+**Weather.** Search for a city or postal code, add as many places as you like, and click a place for the next 12 hours, three days, wind, humidity and sunrise. °F or °C in Edit. Open-Meteo is free for non-commercial use and asks for credit, which the widget shows.
+
+**Outages.** Pick from ready-made services or paste any status page address. Most status pages run on Atlassian Statuspage (Cloudflare, GitHub, Zoom, Jira, Dropbox, Box, Twilio, DigitalOcean, Datadog, Discord and thousands more) and work everywhere. Microsoft 365, Azure, AWS, Google Workspace, Google Cloud and Slack publish feeds that may not let websites read them; installed as an extension, Shelfmark asks to read that one site when you add it. Microsoft's public feed only lists widespread problems and ones that block the admin center; your tenant's full service health needs a sign-in.
+
+When a service reports a problem, a banner appears at the top of Shelfmark and the widget turns red. **×** on the banner hides that alert until something changes (a new incident, or it gets worse); a service that recovers forgets the dismissal.
+
+**Traffic.** Paste a Google Maps directions link (the full address from the browser, not a short `maps.app.goo.gl` link), or type From and To. Each route shows the drive time now, how much traffic adds, the route, distance and arrival time if you leave now; its name opens it in Google Maps. **Add return** makes the trip back.
+
+Setting up a key (once):
+
+1. In the [Google Cloud console](https://console.cloud.google.com/projectcreate), create a project and turn on billing. Google requires billing; traffic-aware requests are billed as "Compute Routes Pro", with 5,000 a month free and $10 per 1,000 after that (Google's price list in October 2026).
+2. Turn on the [Routes API](https://console.cloud.google.com/apis/library/routes.googleapis.com).
+3. Under [Credentials](https://console.cloud.google.com/apis/credentials), create an API key. Restrict it to the Routes API. For the website, also restrict it to **Websites** and add `https://<your-username>.github.io/*`. For the extension, leave application restrictions off.
+4. Optional but sensible: on the Routes API's **Quotas** page, cap requests per day (200 is plenty).
+5. Paste the key in the Traffic widget's Edit. It's kept in this browser only and left out of backups.
+
+The widget's Edit shows how many requests a month your settings allow at most. Two routes every 10 minutes from 6:00 to 19:00 on weekdays is about 3,400, inside the free 5,000.
+
+What the widgets hold (clock list, scratchpad, places, services, routes, last inputs) is saved in the browser with your bookmarks and included in backups. The Google key and the fetched results are not.
 
 ## Opening Shelfmark when the browser starts
 
@@ -177,7 +208,7 @@ Search matches names, sites, tags, notes, group names, paths and open behavior, 
 
 ## Your data
 
-Everything lives in `chrome.storage.local` in this browser profile. Nothing is sent anywhere.
+Everything lives in this browser: `chrome.storage.local` in the extension, the site's storage on the website. Nothing is sent anywhere, except what the live widgets fetch (see Live widgets).
 
 - **Export backup** (⋯ menu or Settings) downloads a JSON file with every group, bookmark, setting and open count, and what the widgets hold.
 - **Import** accepts a Shelfmark backup (add to what's there, or replace everything) or the bookmarks HTML file that Chrome, Firefox, Edge and Safari export. Each folder becomes a group. Every import can be undone from the toast that follows.
@@ -191,6 +222,7 @@ Everything lives in `chrome.storage.local` in this browser profile. Nothing is s
 | `tabGroups` | Naming and coloring the tab group made by Open all |
 | `contextMenus` | Right-click › Save to Shelfmark |
 | `favicon` | Chrome and Edge: showing site icons from the browser's own cache, so no third-party icon service sees your list |
+| Optional: individual sites | Asked for one site at a time when you add an outage feed that doesn't let other pages read it (Microsoft, Azure, AWS, Google, Slack). Nothing is granted until you agree. |
 
 ## Files
 
@@ -209,6 +241,12 @@ lib/open.js        Opening links, groups, private windows, tab reuse
 lib/search.js      Fuzzy search used by the page and the address bar
 lib/importers.js   Backup and bookmarks-HTML import/export
 js/widgets.js      The widget panel: clocks, date math, scratchpad, subnet, timestamps
+js/live.js         Weather, outages and traffic widgets
+js/wkit.js         Small helpers shared by the widgets
+lib/net.js         Fetching live data; asking the extension for a site
+lib/weather.js     Open-Meteo requests and weather codes
+lib/status.js      Statuspage, RSS/Atom and Slack status, and the ready-made services
+lib/routes.js      Google Maps links, the Routes API, refresh hours and cost estimate
 lib/calc.js        The search box's calculator (a parser; no eval)
 lib/subnet.js      IPv4 and IPv6 subnet math
 lib/timetools.js   Timestamp reading and date arithmetic

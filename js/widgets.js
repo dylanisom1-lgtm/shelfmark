@@ -1,16 +1,17 @@
-// The widget panel: clocks, date math, scratchpad, subnet calculator and timestamp converter.
-// Settings › Widgets turns them on and sets their order. What they hold (the clock list,
-// the scratchpad, last inputs) is saved apart from the bookmarks and included in backups.
-// The calculator isn't a panel: it answers in the search box (see app.js).
+// The widget panel. Settings › Widgets turns widgets on and sets their order. What they hold
+// (the clock list, the scratchpad, saved places and routes, last inputs) is saved apart from
+// the bookmarks and included in backups. The calculator isn't a panel: it answers in the
+// search box (see app.js). Weather, outages and traffic fetch live data (see live.js).
 
 import { parseSubnet } from '../lib/subnet.js';
 import {
   parseTimestamp, describeInstant, relativeTime, READS, READ_ORDER,
   today, fromInput, toInput, formatDay, between, addToDate, UNITS, isoWeek, dayOfYear, dayNum,
 } from '../lib/timetools.js';
-import { loadWidgetData, saveWidget } from '../lib/store.js';
-import { escHtml as esc } from './ui.js';
+import { loadWidgetData, saveWidget, secrets, cache } from '../lib/store.js';
 import { ICONS } from '../lib/icons.js';
+import { esc, num, plural, capFirst, debounce, copyBtn, kvList } from './wkit.js';
+import { weather, outages, traffic } from './live.js';
 
 export const WIDGETS = {
   calc: { name: 'Calculator', blurb: 'Type a sum like 1450*1.06 in the search box. Enter copies the answer.', inSearch: true },
@@ -19,49 +20,16 @@ export const WIDGETS = {
   scratch: { name: 'Scratchpad', blurb: 'A note that saves as you type.' },
   subnet: { name: 'Subnet calculator', blurb: 'Network, mask, range and host count for an IPv4 or IPv6 prefix.' },
   timestamp: { name: 'Timestamp converter', blurb: 'Unix, Active Directory and LDAP times to readable dates, and back.' },
+  weather: { name: 'Weather', blurb: 'Conditions and forecasts for places you save. From Open-Meteo, which receives the places.', live: true },
+  outages: { name: 'Outages', blurb: 'Status of online services you use, from their status pages. Problems show as a banner.', live: true },
+  traffic: { name: 'Traffic', blurb: 'Live drive times for routes you save, from Google, using your own API key.', live: true },
 };
 
-// --- small helpers -------------------------------------------------------------------
-const num = (n) => Number(n).toLocaleString();
-const plural = (n, word) => `${num(n)} ${word}${n === 1 ? '' : 's'}`;
-const capFirst = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-
-function debounce(fn, ms) {
-  let t = null;
-  const d = () => {
-    clearTimeout(t);
-    t = setTimeout(() => {
-      t = null;
-      fn();
-    }, ms);
-  };
-  d.flush = () => {
-    if (t === null) return;
-    clearTimeout(t);
-    t = null;
-    fn();
-  };
-  return d;
-}
-
-// A value that copies itself when clicked.
-const copyBtn = (text, copy = text, cls = '') =>
-  `<button type="button" class="kv-val${cls ? ' ' + cls : ''}" data-wcopy="${esc(copy)}" title="Copy">${esc(text)}</button>`;
-
-// rows: [label, shown, copyValue (false: not copyable), extra, class ('' for ordinary text)]
-function kvList(rows) {
-  return `<dl class="kvs">${rows
-    .filter(Boolean)
-    .map(([label, value, copy, extra, cls]) => {
-      const v = copy === false ? `<span class="kv-text">${esc(value)}</span>` : copyBtn(value, copy == null ? value : copy, cls == null ? 'code' : cls);
-      return `<div class="kv"><dt>${esc(label)}</dt><dd>${v}${extra ? `<span class="kv-extra">${extra}</span>` : ''}</dd></div>`;
-    })
-    .join('')}</dl>`;
-}
-
 // --- the panel -----------------------------------------------------------------------
-export function createWidgetPanel({ root, toast, copyText }) {
+export function createWidgetPanel({ root, toast, copyText, onAlerts = () => {} }) {
   let data = {};
+  let keys = {}; // API keys: never exported
+  let fetched = {}; // last results from live widgets: never exported
   let order = [];
   const live = new Map(); // id -> { section, inst }
 
@@ -79,6 +47,21 @@ export function createWidgetPanel({ root, toast, copyText }) {
     toast,
     copyText,
     flash,
+    secret: {
+      get: (name) => (keys[id] && keys[id][name]) || '',
+      set: (name, value) => {
+        keys[id] = { ...(keys[id] || {}), [name]: value };
+        return secrets.save(id, keys[id]);
+      },
+    },
+    cache: {
+      get: () => (fetched[id] && typeof fetched[id] === 'object' ? fetched[id] : {}),
+      set: (value) => {
+        fetched[id] = value;
+        return cache.save(id, value);
+      },
+    },
+    alerts: (list) => onAlerts(id, list),
   });
 
   function flash(el, msg) {
@@ -133,9 +116,9 @@ export function createWidgetPanel({ root, toast, copyText }) {
     fresh.forEach((id) => live.get(id).inst.tick && live.get(id).inst.tick(now, true));
   }
 
-  // Another tab (or a backup) changed what the widgets hold.
+  // Another tab (or a backup) changed what the widgets hold, or fetched something new.
   async function refresh() {
-    data = await loadWidgetData();
+    [data, keys, fetched] = await Promise.all([loadWidgetData(), secrets.load(), cache.load()]);
     for (const { inst } of live.values()) if (inst.refresh) inst.refresh();
   }
 
@@ -174,11 +157,16 @@ export function createWidgetPanel({ root, toast, copyText }) {
 
   return {
     async load() {
-      data = await loadWidgetData();
+      [data, keys, fetched] = await Promise.all([loadWidgetData(), secrets.load(), cache.load()]);
     },
     render,
     refresh,
     getData: () => data,
+    // From the alert banner: hide this alert until what's wrong changes.
+    dismiss(id, key, sig) {
+      const m = live.get(id);
+      if (m && m.inst.dismiss) m.inst.dismiss(key, sig);
+    },
   };
 }
 
@@ -834,4 +822,4 @@ function timestamp(el, ctx) {
   };
 }
 
-const FACTORIES = { clocks, dates, scratch, subnet, timestamp };
+const FACTORIES = { clocks, dates, scratch, subnet, timestamp, weather, outages, traffic };
